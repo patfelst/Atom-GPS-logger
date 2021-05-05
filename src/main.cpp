@@ -46,7 +46,7 @@ uint32_t blink_led_time = 0;
 char csv_string[150] = {0};
 
 // Function prototypes
-void flash_builting_RGB(CRGB led[NUM_BUILTIN_LEDS], uint32_t color, uint8_t brightness_percent, uint8_t freq, int16_t flash_number);
+void flash_builtin_RGB(CRGB led[NUM_BUILTIN_LEDS], uint32_t color, uint8_t brightness_percent, uint8_t freq, int16_t flash_number);
 void rgb_led_to_gps_quality(CRGB led[NUM_BUILTIN_LEDS], uint8_t sats);
 void ublox_disable_nmea(const char *nmea_type);
 uint8_t display_raw_NMEA(uint8_t num_lines);
@@ -69,7 +69,7 @@ void setup() {
   Serial.begin(115200);
   Serial.println("Atom GPS logger");
   // Give user time to connect debug serial monitor
-  flash_builting_RGB(leds_builtin, CRGB::DarkBlue, 100, 5, 25);
+  flash_builtin_RGB(leds_builtin, CRGB::DarkBlue, 100, 5, 25);
 
   /*******************
    * Setup Atom GPS module
@@ -92,7 +92,7 @@ void setup() {
   if (!SD.begin(SPI_CS, SPI, 40000000)) {
     Serial.println("Micro SD card failed to initialise \"Err-4\"");
     do {
-      flash_builting_RGB(leds_builtin, CRGB::Red, 100, 2, 4);
+      flash_builtin_RGB(leds_builtin, CRGB::Red, 100, 2, 4);
       FastLED.delay(1000);
     } while (true);
   }
@@ -116,7 +116,7 @@ void setup() {
     Serial.printf("Error opening micro SD card filename \"%s\". \"Err-5\"\n", filename);
     // Flash red LED with error code 4, forever
     do {
-      flash_builting_RGB(leds_builtin, CRGB::Red, 100, 2, 5);
+      flash_builtin_RGB(leds_builtin, CRGB::Red, 100, 2, 5);
       FastLED.delay(1000);
     } while (true);
   }
@@ -229,19 +229,20 @@ void ublox_disable_nmea(const char *nmea_type) {
 
 /*
 -----------------
-  Flash the RGB LED on the PCB
+  Flash the builtin RGB LED on the Atom's main button
+  led - the led array
   color - colour to flash
   brightness_percent - percentage brightness
   freq - freq in Hz to flash
   flash_number - number of flashes to do. -1 = forever
 -----------------
 */
-void flash_builting_RGB(CRGB led[NUM_BUILTIN_LEDS], uint32_t color, uint8_t brightness_percent, uint8_t freq, int16_t flash_number) {
+void flash_builtin_RGB(CRGB led[NUM_BUILTIN_LEDS], uint32_t color, uint8_t brightness_percent, uint8_t freq, int16_t flash_number) {
   uint32_t period = 500 / freq;  // Double the frequency of 1000ms period
   uint32_t count = flash_number;
-  uint8_t led_bright_pc = ((brightness_percent * 0xFF) / 100);
+  uint8_t led_bright = ((brightness_percent * 0xFF) / 100);
 
-  FastLED.setBrightness(led_bright_pc);
+  FastLED.setBrightness(led_bright);
 
   while (count > 0) {
     led[0] = color;
@@ -257,7 +258,7 @@ void flash_builting_RGB(CRGB led[NUM_BUILTIN_LEDS], uint32_t color, uint8_t brig
 /*
 -----------------
   Set RGB LED to display colour based on quality of GPS fix using satellites in view
-  BAD / OK / GOOD = RED/AMBER/GREEN
+  BAD / OK / GOOD = RED / AMBER / GREEN
 -----------------
 */
 void rgb_led_to_gps_quality(CRGB led[NUM_BUILTIN_LEDS], uint8_t sats) {
