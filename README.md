@@ -15,7 +15,7 @@ Why would you want to send commands to the GPS? Because by default the M8030-KT 
 Developed using the PlatformIO (PIO) microcontrolller IDE. PIO is a plugin for Visual Studio Code. The Arduino code framework is used.
 
 <h2>I don't use M5Stack objects</h2>
-With most M5Stack products, I choose not to use thier board object for various reasons. Mostly because their object often includes other Arduino libraries (for example FastLED and TFT_eSPI graphics) but they don't update thier object code when the inlcuded libraries are updated. Therefore you won't see my code include the M5Atom.h library, nor use M5.begin().
+With most M5Stack products, I choose not to use their board object for various reasons. Mostly because their object often includes other Arduino libraries (for example FastLED and TFT_eSPI graphics) but they don't update thier object code when the inlcuded libraries are updated. Therefore you won't see my code include the M5Atom.h library, nor use M5.begin().
 
 <h2>Hardware mod to connect the GPS Rx signal</h2>
 You just need to solder in one very short piece of wire as follows.
