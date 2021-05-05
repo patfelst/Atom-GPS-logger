@@ -73,16 +73,17 @@ void setup() {
 
   /*******************
    * Setup Atom GPS module
-   * Note: Had to wire in the GPS RX pin from 4-pin header to ESP32 Tx pin 21 inside the Atom
+   * Had to wire in the GPS's RX pin from 4-pin header to ESP32 Tx pin 21 inside the Atom
    * ****************/
+  // The ESP32's UART-1 is used to communicate with the GPS module. GPIO22 = Rx, GPIO21 = Tx.
   GPSSerial.begin(9600, SERIAL_8N1, 22, 21);
-  // display_raw_NMEA(8);
+  display_raw_NMEA(8);  // Comment this out once you've seen the effect of the ublox_disable_nmea() commands
   ublox_disable_nmea("GLL");
   ublox_disable_nmea("GSV");
   ublox_disable_nmea("GSA");
   ublox_disable_nmea("VTG");
-  // Serial.println();
-  // display_raw_NMEA(8);
+  Serial.println();
+  display_raw_NMEA(8);  // Comment this out once you've seen the effect of the ublox_disable_nmea() commands
 
   /*******************
    * Initialise micro SD card
@@ -274,7 +275,7 @@ void rgb_led_to_gps_quality(CRGB led[NUM_BUILTIN_LEDS], uint8_t sats) {
 
 /*
 -----------------
-  Read and display raw NMEA sentences for the "duration" in ms
+  Read and display "num_lines" of raw NMEA sentences
   Starts displaying anywhere in the sentence, and finishes at the end of a sentence after the duration
   Times out after 3 seconds if no characters are received from the GPS module
 -----------------
