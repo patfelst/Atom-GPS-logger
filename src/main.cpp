@@ -1,10 +1,24 @@
+/*
+M5Stack Atom GPS kit data log to micro SD card. Ability to configure the GPS module
+via the ESP32 UART.
+
+Developed using the PlatformIO (PIO) microcontrolller IDE. PIO is a plugin for
+Visual Studio Code. The Arduino code framework is used.
+
+This program uses the following libraries, unmodified:
+FastLED
+TinyGPS++
+
+Version         Author              Date          Change
+v0.1            Patrick Felstead    5-May-2021    First release
+*/
 #include <Arduino.h>
 #include <FastLED.h>
-#include <SD.h>
+#include <SD.h>  // This is the Espressif implemenation of SD.h. Don't install the Arduino SD.h to this project!
 #include <SPI.h>
 #include <TinyGPS++.h>
 
-#define ATOM_GPS_WARNER_VERS "0.2"
+#define ATOM_GPS_LOGGER_VERS "0.1"
 
 // SD card pins
 #define SPI_SCK  23
@@ -18,13 +32,7 @@
 #define RGBLED_BUILTIN_BRIGHTNESS_PC 100  // RGB LED Brightness in %
 CRGB leds_builtin[NUM_BUILTIN_LEDS];      // FastLED "array" for single builtin RGB LED
 
-// Atom 3x SK6812 RGB LED
-#define NUM_3X_EXT_LEDS          3
-#define RGBLED_EXT_3X_PIN        26
-#define RGBLED_EXT_BRIGHTNESS_PC 100  // RGB LED Brightness in %
-CRGB leds_3x_ext[NUM_3X_EXT_LEDS];    // FastLED "array" for 3x external RGB LEDs
-
-// Serial1 is the hardware UART serial port on the Feather M0, pins PA10 (Tx) and PA11 (Rx)
+// Serial1 is a hardware UART serial port on the ESP32 connected to the GPS module
 #define GPSSerial Serial1
 
 // The TinyGPS++ object - See website for documentation http://arduiniana.org/libraries/tinygpsplus/
@@ -39,7 +47,6 @@ char csv_string[150] = {0};
 
 // Function prototypes
 void flash_builting_RGB(CRGB led[NUM_BUILTIN_LEDS], uint32_t color, uint8_t brightness_percent, uint8_t freq, int16_t flash_number);
-void leds_3x_display(CRGB led1_color, CRGB led2_color, CRGB led3_color);
 void rgb_led_to_gps_quality(CRGB led[NUM_BUILTIN_LEDS], uint8_t sats);
 void ublox_disable_nmea(const char *nmea_type);
 uint8_t display_raw_NMEA(uint8_t num_lines);
@@ -51,44 +58,16 @@ uint8_t display_raw_NMEA(uint8_t num_lines);
 */
 void setup() {
   /*******************
-   * Setup RGB LEDs
+   * Setup RGB LED
    * ****************/
   // Setup Atom's single built in RGB LED
   FastLED.addLeds<WS2812, RGBLED_BUILTIN_PIN, GRB>(leds_builtin, NUM_BUILTIN_LEDS);
-
-  // Setup Atom's 3x external RGB LEDs
-  FastLED.addLeds<SK6812, RGBLED_EXT_3X_PIN, GRB>(leds_3x_ext, NUM_3X_EXT_LEDS);
-
-  // Display all 3x LEDs in one rainbow colour
-  // FastLED.setBrightness((uint8_t)((5 * 0xFF) / 100));
-  // uint8_t hue = 0;
-  // for (int i = 0; i < 0xFF; i++) {
-  //   fill_rainbow(leds_3x_ext, 3, hue++, 0);
-  //   FastLED.delay(10);
-  // }
-  // fill_solid(leds_3x_ext, NUM_3X_EXT_LEDS, CRGB::Black);
-  // FastLED.delay(200);
-  // Walk 3x LEDs in sequence in blue
-  // uint8_t led_num = 0;
-  // do {
-  //   leds_3x_ext[led_num++ % 3] = CRGB::DarkBlue;
-  //   FastLED.delay(200);
-  //   leds_3x_display(CRGB::Black, CRGB::Black, CRGB::Black);
-  // } while (led_num < 6);
-  // Walk 3x LEDs in Green/Amber/Red
-  // leds_3x_display(CRGB::Green, CRGB::Black, CRGB::Black);
-  // FastLED.delay(200);
-  // leds_3x_display(CRGB::Black, CRGB::Orange, CRGB::Black);
-  // FastLED.delay(200);
-  // leds_3x_display(CRGB::Black, CRGB::Black, CRGB::Red);
-  // FastLED.delay(200);
-  // leds_3x_display(CRGB::Black, CRGB::Black, CRGB::Black);
 
   /*******************
    * Setup debug monitor serial port
    * ****************/
   Serial.begin(115200);
-  Serial.println("Atom GPS warning device");
+  Serial.println("Atom GPS logger");
   // Give user time to connect debug serial monitor
   flash_builting_RGB(leds_builtin, CRGB::DarkBlue, 100, 5, 25);
 
@@ -129,8 +108,8 @@ void setup() {
 
   if (log_file) {
     Serial.printf("Opened micro SD card filename \"%s\" OK.\n", filename);
-    log_file.printf("Atom GPS warner version v%s. TinyGPS++ library v%s.\n", ATOM_GPS_WARNER_VERS, gps.libraryVersion());
-    log_file.println("ddmmyy, hh:mm:ss, Lat, Long, Alt, Speed, Course, HDOP, PFA, CF, CCP, CCF, SIV.");
+    log_file.printf("Atom GPS logger version v%s. TinyGPS++ library v%s.\n", ATOM_GPS_LOGGER_VERS, gps.libraryVersion());
+    log_file.println("ddmmyy, hh:mm:ss, Lat, Long, Alt, Speed, Course, HDOP, PFA, CF, CCP, CCF, SIV");
     log_file.flush();
   } else {
     Serial.printf("Error opening micro SD card filename \"%s\". \"Err-5\"\n", filename);
@@ -245,18 +224,6 @@ void ublox_disable_nmea(const char *nmea_type) {
   sprintf(cmd, "$%s*%2X", msg, checksum);
   GPSSerial.println(cmd);
   Serial.println(cmd);
-}
-
-/*
------------------
-  Set colours for all 3 Atom external RGB LEDs
------------------
-*/
-void leds_3x_display(CRGB led1_color, CRGB led2_color, CRGB led3_color) {
-  leds_3x_ext[0] = led1_color;
-  leds_3x_ext[1] = led2_color;
-  leds_3x_ext[2] = led3_color;
-  FastLED.show();
 }
 
 /*
