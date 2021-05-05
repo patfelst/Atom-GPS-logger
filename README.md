@@ -1,4 +1,7 @@
 # Atom GPS logger
+
+![](images/M5Stack_Atom_GPS_kit.jpg "M5Stack Atom GPS kit")
+
 This repository shows how to use a [M5Stack Atom GPS kit](https://shop.m5stack.com/collections/m5-atom/products/atom-gps-kit-m8030-kt) to receive NMEA sentences from the GPS, parse and format them with the TinyGPS++ library, and and write the formatted data to the GPS kit's micro SD card. During setup, the Atom's RGB LED is used to display any errors initialising the the SD card, and while logging shows the quality of the GPS fix (Green=Good, Amber=ok, Red=bad).
 
 This Atom GPS kit uses a [u-blox UBX-M8030-KT](https://www.u-blox.com/en/product/ubx-m8030-series#tab-document-resources) GPS chipset, part of the u-blox M8 GNSS series of GPS chips. This is a highly configurable GPS chip. **Inexplicably**, the M5Stack Atom GPS kit only connects the GPS's transmit (Tx) pin to the ESP, but not the Rx pin, therefore out of the box, the Atom GPS kit can't recive configuration commands from the ESP32. The main point of this repository is to show how to modify the GPS kit hardware so that the GPS module can be configured by serial commands. 
@@ -22,12 +25,9 @@ You just need to solder in one very short piece of wire as follows.
 5. Solder a short length of wire from the 3rd pin on the 4-pin connector which is on the main PCB to pin 21 of the 4-pin header that the Atom normally plugs into.
 6. Re-assemble everything. That's it!
 
-(images/2021-05-02 15.50.10.jpg)
+![ ](images/Add_Rx_signal_1.jpg)
 
-(images/2021-05-02 15.50.40.jpg)
+![ ](images/Add_Rx_signal_4.jpg)
 
-(images/2021-05-02 15.50.51-1.jpg)
+![ ](images/Add_Rx_signal_5.jpg)
 
-(images/2021-05-02 15.50.54-1.jpg)
-
-(images/2021-05-02 15.51.07-1.jpg)
