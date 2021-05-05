@@ -10,6 +10,8 @@ The main point of this repository is to show how with a simple one wire mod, you
 
 Why would you want to send commands to the GPS? Because by default the M8030-KT sends many NMEA sentence types (RMC, VTG, GGA, GSA, GSV, GLL) however TinyGPS only uses GGA and RMC, so the ESP32 has to process many many unnecessary characters and discard them. By sending config commands to the M8030-KT we can turn off the unnecessary GLL, GSV, GSA and VTG sentences.
 
+![ ](images/RAW_NMEA_sentences.png "RAW NMEA sentences from M8030-KT before turning off unnecessary ones")
+
 Developed using the PlatformIO (PIO) microcontrolller IDE. PIO is a plugin for Visual Studio Code. The Arduino code framework is used.
 
 <h2>I don't use M5Stack objects</h2>
