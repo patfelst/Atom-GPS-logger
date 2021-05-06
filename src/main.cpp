@@ -143,7 +143,9 @@ void loop() {
     // Clear the log buffer first
     memset(csv_string, 0, sizeof(csv_string));
 
-    // Blink RGB LED @ 20% brightness every 2 seconds to indicate GPS fix quality
+    // Blink RGB LED every 1 second to indicate GPS fix quality
+    // Change "500" to "1500" if you're running off a LiPo battery and want to reduce power consumption
+    // "1500" will cause the LED to blink every 2 seconds
     if (millis() - blink_led_time >= 500) {
       blink_led_time = millis();
       rgb_led_to_gps_quality(leds_builtin, gps.satellites.value());
@@ -199,7 +201,7 @@ void loop() {
     log_file.flush();
 
     // We can afford to delay 1/10th sec to keep the RGB LED lit longer as the 1 second NMEA update has only just started
-    // Execution time from just after .isUpdated() to here is about 20 ms
+    // Execution time from just after .isUpdated() to here is TBD on ESP32!! (20ms on Adafruit Feather M0 at 48MHz)
     delay(100);
     leds_builtin[0] = CRGB::Black;
     FastLED.show();
@@ -216,12 +218,12 @@ void ublox_disable_nmea(const char *nmea_type) {
   char cmd[40] = {0};
 
   sprintf(msg, "PUBX,40,%s,0,0,0,0,0,0", nmea_type);
-  // find checksum
+  // Calculate checksum
   char checksum = 0;
   for (uint8_t i = 0; msg[i]; i++)
     checksum ^= (char)msg[i];
 
-  // create command string
+  // Create command string
   sprintf(cmd, "$%s*%2X", msg, checksum);
   GPSSerial.println(cmd);
   Serial.println(cmd);
@@ -230,7 +232,7 @@ void ublox_disable_nmea(const char *nmea_type) {
 /*
 -----------------
   Flash the builtin RGB LED on the Atom's main button
-  led - the led array
+  led - the FastLED array
   color - colour to flash
   brightness_percent - percentage brightness
   freq - freq in Hz to flash
@@ -277,7 +279,7 @@ void rgb_led_to_gps_quality(CRGB led[NUM_BUILTIN_LEDS], uint8_t sats) {
 /*
 -----------------
   Read and display "num_lines" of raw NMEA sentences
-  Starts displaying anywhere in the sentence, and finishes at the end of a sentence after the duration
+  Starts displaying anywhere in the sentence, and finishes at the end of a sentence i.e. after <CR><LF>
   Times out after 3 seconds if no characters are received from the GPS module
 -----------------
 */
